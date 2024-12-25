@@ -13,6 +13,8 @@ const userInput = document.getElementById('user-input');
 const sendMessageBtn = document.getElementById('send-message');
 const chatResponses = document.getElementById('chat-responses');
 
+const container = document.querySelector('.container');
+
 // Chat History Management
 function saveMessage(message, type) {
   chrome.storage.local.get(['chatHistory'], (result) => {
