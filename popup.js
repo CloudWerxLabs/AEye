@@ -61,30 +61,75 @@ function loadChatHistory() {
 
 // Scroll Position Management
 function saveScrollPosition() {
-  if (chatResponses) {
-    chrome.storage.local.set({ 
-      chatScrollPosition: chatResponses.scrollTop,
-      chatScrollHeight: chatResponses.scrollHeight
-    }, () => {
-      log(`Saved scroll position: ${chatResponses.scrollTop}`);
-    });
-  }
+  if (!chatResponses) return;
+  
+  const scrollData = {
+    scrollTop: chatResponses.scrollTop,
+    scrollHeight: chatResponses.scrollHeight,
+    clientHeight: chatResponses.clientHeight,
+    timestamp: Date.now()
+  };
+  
+  chrome.storage.local.set({ chatScrollPosition: scrollData }, () => {
+    log(`Saved scroll position: ${JSON.stringify(scrollData)}`);
+  });
 }
 
-function restoreScrollPosition() {
-  if (chatResponses) {
-    // Always scroll to the bottom (newest message)
-    chatResponses.scrollTop = chatResponses.scrollHeight;
-    log('Scrolled to newest message');
-  }
+function restoreScrollPosition(immediate = false) {
+  if (!chatResponses) return;
+  
+  chrome.storage.local.get(['chatScrollPosition', 'chatHistory'], (result) => {
+    if (!result.chatScrollPosition) {
+      chatResponses.scrollTop = chatResponses.scrollHeight;
+      return;
+    }
+
+    const { scrollTop, scrollHeight, clientHeight, timestamp } = result.chatScrollPosition;
+    const currentHistory = result.chatHistory || [];
+    
+    // Calculate if we were at the bottom
+    const wasAtBottom = (scrollTop + clientHeight >= scrollHeight - 10);
+    
+    // Check for new messages
+    const hasNewMessages = currentHistory.length > 0 && 
+      timestamp < new Date(currentHistory[currentHistory.length - 1].timestamp).getTime();
+
+    if (wasAtBottom || hasNewMessages) {
+      chatResponses.scrollTop = chatResponses.scrollHeight;
+    } else {
+      // Use setTimeout to ensure DOM is ready
+      setTimeout(() => {
+        const scrollRatio = scrollTop / scrollHeight;
+        chatResponses.scrollTop = Math.floor(chatResponses.scrollHeight * scrollRatio);
+      }, immediate ? 0 : 100);
+    }
+  });
 }
 
-// Load chat history when popup is opened
+// Initialize scroll handling
 document.addEventListener('DOMContentLoaded', () => {
+  // Load chat history first
   loadChatHistory();
   
-  // Restore scroll position (which now always goes to bottom)
-  restoreScrollPosition();
+  // Setup scroll position handling after a short delay
+  setTimeout(() => {
+    if (chatResponses) {
+      // Save scroll position before popup closes
+      chrome.runtime.connect().onDisconnect.addListener(() => {
+        saveScrollPosition();
+      });
+      
+      // Save scroll position on scroll (debounced)
+      let scrollTimeout;
+      chatResponses.addEventListener('scroll', () => {
+        clearTimeout(scrollTimeout);
+        scrollTimeout = setTimeout(saveScrollPosition, 150);
+      });
+      
+      // Initial scroll position restore
+      restoreScrollPosition(true);
+    }
+  }, 100);
 });
 
 // Send Message Functionality
@@ -103,7 +148,10 @@ function sendMessage() {
   chatResponses.appendChild(userMessageEl);
 
   // Always scroll to bottom after sending a message
-  chatResponses.scrollTop = chatResponses.scrollHeight;
+  setTimeout(() => {
+    chatResponses.scrollTop = chatResponses.scrollHeight;
+    saveScrollPosition();
+  }, 100);
 
   // Retrieve API Key before sending
   chrome.storage.sync.get(['grokApiKey'], (result) => {

@@ -17,3 +17,11 @@
 - Enhanced error handling
 - More robust API communication
 - Additional UI customization options
+
+## [1.0.1] - 2024-12-25
+
+### Fixed
+- Scroll position now properly saves and restores when reopening the extension
+- Added intelligent scroll behavior that maintains position for existing messages but scrolls to bottom for new messages
+- Improved scroll position tracking with debounced saves during scrolling
+- Added visibility change detection to save scroll position when popup closes
