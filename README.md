@@ -1,10 +1,10 @@
-# 🤖 Aeye - AI-Powered Chrome Extension
+# 🤖 AEye - AI-Powered Chrome Extension
 
-![Aeye Logo](logo_with_text.svg)
+![AEye Logo](logo_with_text.svg)
 
 ## 🌟 Project Overview
 
-Aeye is an innovative Chrome extension that brings powerful AI capabilities directly to your browser, transforming how you interact with artificial intelligence.
+AEye is an innovative Chrome extension that brings powerful AI capabilities directly to your browser, transforming how you interact with artificial intelligence.
 
 ## 🚀 Key Features
 

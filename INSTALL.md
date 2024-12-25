@@ -1,4 +1,4 @@
-# 🚀 Aeye Installation Guide
+# 🚀 AEye Installation Guide
 
 ## 📋 Prerequisites
 
@@ -49,7 +49,7 @@ start chrome://extensions
 ## 🔑 API Key Configuration
 
 1. Obtain AI Service API Key
-2. Open Aeye Extension
+2. Open AEye Extension
 3. Enter API Key in settings modal
 4. Click "Save"
 

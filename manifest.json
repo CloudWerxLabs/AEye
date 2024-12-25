@@ -1,24 +1,24 @@
 {
   "manifest_version": 3,
-  "name": "Aeye Grok AI Assistant",
+  "name": "AEye",
   "version": "0.1.0",
   "description": "AI sidebar powered by xAI Grok",
   "permissions": [
     "storage",
-    "contextMenus"
+    "activeTab"
   ],
   "action": {
     "default_popup": "popup.html",
     "default_icon": {
-      "16": "icons/logo_16x16.png",
-      "48": "icons/logo_48x48.png",
-      "128": "icons/logo_128_x_128.png"
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
     }
   },
   "icons": {
-    "16": "icons/logo_16x16.png",
-    "48": "icons/logo_48x48.png", 
-    "128": "icons/logo_128_x_128.png"
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png", 
+    "128": "icons/icon128.png"
   },
   "background": {
     "service_worker": "background.js"
