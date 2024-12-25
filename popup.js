@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Load saved API key
   chrome.storage.sync.get(['grokApiKey'], (result) => {
     if (result.grokApiKey) {
-      apiKeyInput.value = result.grokApiKey;
+      apiKeyInput.value = result.grokApiKey.trim();
       apiKeyStatus.textContent = 'API Key loaded successfully';
       apiKeyStatus.style.color = 'green';
     }
@@ -56,10 +56,11 @@ document.addEventListener('DOMContentLoaded', () => {
         throw new Error('No API key found. Please save your API key first.');
       }
 
-      const response = await fetchGrokResponse(message, grokApiKey);
+      const trimmedApiKey = grokApiKey.trim();
+      const response = await fetchGrokResponse(message, trimmedApiKey);
       addMessageToChatUI(response, 'ai');
     } catch (error) {
-      console.error('Error:', error);
+      console.error('Detailed Error:', error);
       addMessageToChatUI(`Error: ${error.message}`, 'ai');
     }
 
@@ -77,6 +78,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   async function fetchGrokResponse(message, apiKey) {
     try {
+      console.log('Sending request with API key:', apiKey.substring(0, 5) + '...');
+      
       const response = await fetch('https://api.x.ai/v1/chat/completions', {
         method: 'POST',
         headers: {
@@ -89,12 +92,16 @@ document.addEventListener('DOMContentLoaded', () => {
         })
       });
 
+      console.log('Response status:', response.status);
+
       if (!response.ok) {
         const errorBody = await response.text();
+        console.error('Error response body:', errorBody);
         throw new Error(`HTTP error! status: ${response.status}, body: ${errorBody}`);
       }
 
       const data = await response.json();
+      console.log('API Response:', data);
       return data.choices[0].message.content;
     } catch (error) {
       console.error('Detailed Grok API Error:', error);
