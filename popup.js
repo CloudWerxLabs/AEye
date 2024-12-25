@@ -12,6 +12,9 @@ const modalApiKeyStatus = document.getElementById('modal-api-key-status');
 const userInput = document.getElementById('user-input');
 const sendMessageBtn = document.getElementById('send-message');
 const chatResponses = document.getElementById('chat-responses');
+const imageUpload = document.getElementById('image-upload');
+
+let currentImage = null;
 
 // Logging function
 function log(message, type = 'info') {
@@ -50,7 +53,14 @@ function loadChatHistory() {
       chatHistory.forEach(item => {
         const messageEl = document.createElement('div');
         messageEl.classList.add('message', `${item.type}-message`);
-        messageEl.textContent = item.message;
+        if (item.type === 'user' && item.message.type === 'image') {
+          messageEl.innerHTML = `
+            <img src="${item.message.content}" alt="Uploaded image" class="image-preview">
+            <div>Image uploaded successfully! Type your question about the image.</div>
+          `;
+        } else {
+          messageEl.textContent = item.message;
+        }
         chatResponses.appendChild(messageEl);
       });
     });
@@ -132,26 +142,92 @@ document.addEventListener('DOMContentLoaded', () => {
   }, 100);
 });
 
+// Image Upload Handling
+imageUpload.addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  
+  if (!file.type.startsWith('image/')) {
+    log('Please upload an image file', 'error');
+    return;
+  }
+  
+  try {
+    // Convert image to base64
+    const base64Image = await fileToBase64(file);
+    currentImage = base64Image;
+    
+    // Show preview
+    const previewEl = document.createElement('div');
+    previewEl.classList.add('message', 'user-message', 'image-message');
+    previewEl.innerHTML = `
+      <img src="${base64Image}" alt="Uploaded image" class="image-preview">
+      <div>Image uploaded successfully! Type your question about the image.</div>
+    `;
+    chatResponses.appendChild(previewEl);
+    chatResponses.scrollTop = chatResponses.scrollHeight;
+    
+    // Save to chat history
+    saveMessage({ type: 'image', content: base64Image }, 'user');
+  } catch (error) {
+    log(`Error processing image: ${error}`, 'error');
+  }
+});
+
+// File to Base64 conversion
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = error => reject(error);
+  });
+}
+
 // Send Message Functionality
-function sendMessage() {
+async function sendMessage() {
   const message = userInput.value.trim();
   
-  if (!message) return;
+  if (!message && !currentImage) return;
 
-  // Save user message to history
-  saveMessage(message, 'user');
-
+  // Clear input
+  userInput.value = '';
+  
   // Add user message to chat
   const userMessageEl = document.createElement('div');
   userMessageEl.classList.add('message', 'user-message');
   userMessageEl.textContent = message;
   chatResponses.appendChild(userMessageEl);
 
-  // Always scroll to bottom after sending a message
-  setTimeout(() => {
-    chatResponses.scrollTop = chatResponses.scrollHeight;
-    saveScrollPosition();
-  }, 100);
+  // Prepare messages array
+  const messages = [
+    {
+      role: "system",
+      content: "You are a helpful AI assistant in a Chrome extension."
+    }
+  ];
+
+  // Add image if present
+  if (currentImage) {
+    messages.push({
+      role: "user",
+      content: [
+        { type: "image_url", image_url: { url: currentImage } },
+        { type: "text", text: message || "What's in this image?" }
+      ]
+    });
+  } else {
+    messages.push({
+      role: "user",
+      content: message
+    });
+  }
+
+  // Save message to history
+  saveMessage(message, 'user');
+
+  // Always scroll to bottom after sending
+  chatResponses.scrollTop = chatResponses.scrollHeight;
 
   // Retrieve API Key before sending
   chrome.storage.sync.get(['grokApiKey'], (result) => {
@@ -166,7 +242,7 @@ function sendMessage() {
       return;
     }
 
-    // Call Grok API with updated endpoint and parameters
+    // Call Grok API with vision model for images
     fetch('https://api.x.ai/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -174,27 +250,17 @@ function sendMessage() {
         'Authorization': `Bearer ${result.grokApiKey}`
       },
       body: JSON.stringify({
-        model: "grok-2-1212", // Corrected model name from documentation
-        messages: [
-          {
-            role: "system", 
-            content: "You are a helpful AI assistant in a Chrome extension."
-          },
-          { 
-            role: "user", 
-            content: message 
-          }
-        ],
-        max_tokens: 300, // Optional: limit response length
-        temperature: 0.7, // Optional: control randomness
-        stream: false // Disable streaming for simplicity
+        model: currentImage ? "grok-2-vision-1212" : "grok-2-1212",
+        messages: messages,
+        max_tokens: 500,
+        temperature: 0.7,
+        stream: false
       })
     })
     .then(response => {
       log(`Response status: ${response.status}`);
       if (!response.ok) {
         return response.text().then(errorText => {
-          // Try to parse the error JSON
           try {
             const errorJson = JSON.parse(errorText);
             throw new Error(`API Error: ${errorJson.error || errorText}`);
@@ -208,38 +274,32 @@ function sendMessage() {
     .then(data => {
       log('API Response received');
       
-      // Safely extract AI response
       const aiResponse = data.choices && data.choices[0] && data.choices[0].message 
         ? data.choices[0].message.content 
-        : 'No response from Grok AI';
+        : 'Sorry, I could not generate a response.';
       
-      // Save AI message to history
-      saveMessage(aiResponse, 'ai');
-
       const aiMessageEl = document.createElement('div');
       aiMessageEl.classList.add('message', 'ai-message');
       aiMessageEl.textContent = aiResponse;
       chatResponses.appendChild(aiMessageEl);
       
+      // Save AI response to history
+      saveMessage(aiResponse, 'ai');
+      
+      // Clear current image after processing
+      currentImage = null;
+      
       // Scroll to bottom
       chatResponses.scrollTop = chatResponses.scrollHeight;
     })
     .catch(error => {
-      log(`Error processing request: ${error}`, 'error');
+      log(`Error: ${error.message}`, 'error');
       
-      const errorMessage = `Sorry, there was an error: ${error.message}`;
-      
-      // Save error message to history
-      saveMessage(errorMessage, 'ai');
-
       const errorMessageEl = document.createElement('div');
       errorMessageEl.classList.add('message', 'ai-message', 'error');
-      errorMessageEl.textContent = errorMessage;
+      errorMessageEl.textContent = `Error: ${error.message}`;
       chatResponses.appendChild(errorMessageEl);
     });
-
-    // Clear input
-    userInput.value = '';
   });
 }
 

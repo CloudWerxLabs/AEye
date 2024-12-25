@@ -188,47 +188,79 @@ h1 {
 }
 
 .input-section {
-  display: flex;
   padding: 15px;
   background-color: var(--surface-dark);
   border-top: 1px solid rgba(255,255,255,0.1);
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+.input-wrapper {
+  display: flex;
+  align-items: center;
+  background-color: rgba(255,255,255,0.05);
+  border-radius: 12px;
+  padding: 8px 12px;
+  gap: 8px;
+  border: 1px solid rgba(255,255,255,0.1);
+  flex: 1;
 }
 
 #user-input {
-  flex-grow: 1;
-  padding: 10px;
-  background-color: rgba(255,255,255,0.05);
-  border: 1px solid rgba(255,255,255,0.1);
-  border-radius: 8px;
+  flex: 1;
+  background: transparent;
+  border: none;
   color: var(--text-primary);
-  margin-right: 10px;
   font-size: 14px;
-  transition: all 0.3s ease;
+  line-height: 1.5;
+  padding: 8px 0;
+  min-height: 40px;
 }
 
 #user-input:focus {
   outline: none;
-  border-color: #FF1493;
-  box-shadow: 0 0 0 3px rgba(255, 20, 147, 0.2);
+}
+
+.image-upload-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+  opacity: 0.8;
+}
+
+.image-upload-label:hover {
+  background-color: rgba(255,255,255,0.1);
+  opacity: 1;
+}
+
+.image-icon {
+  font-size: 20px;
+  line-height: 1;
 }
 
 #send-message {
-  padding: 10px 15px;
   background: var(--gradient-primary);
-  color: white;
+  color: var(--text-primary);
   border: none;
-  border-radius: 8px;
+  padding: 12px 24px;
+  border-radius: 12px;
   font-weight: 600;
   cursor: pointer;
-  transition: transform 0.2s ease;
-  background-size: 200% auto;
-  background-position: right center;
+  transition: all 0.3s ease;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 #send-message:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-subtle);
-  background-position: left center;
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-elevated);
 }
 
 .settings-icon {
@@ -338,4 +370,24 @@ h1 {
   text-align: center;
   font-size: 12px;
   color: var(--text-secondary);
+}
+
+.image-preview {
+  max-width: 200px;
+  max-height: 200px;
+  margin: 10px 0;
+  border-radius: 8px;
+  box-shadow: var(--shadow-subtle);
+}
+
+.message.image-message {
+  display: flex;
+  flex-direction: column;
+}
+
+.message.image-message img {
+  max-width: 200px;
+  max-height: 200px;
+  border-radius: 8px;
+  margin-bottom: 8px;
 }

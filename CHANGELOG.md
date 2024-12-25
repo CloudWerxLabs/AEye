@@ -25,3 +25,18 @@
 - Added intelligent scroll behavior that maintains position for existing messages but scrolls to bottom for new messages
 - Improved scroll position tracking with debounced saves during scrolling
 - Added visibility change detection to save scroll position when popup closes
+
+## [1.1.0] - 2024-12-25
+
+### Added
+- Image upload functionality with Grok Vision model integration
+- Image preview support in chat interface
+- Base64 image encoding and handling
+- Automatic model switching between text and vision models
+- Improved UI with camera icon for image uploads
+
+### Enhanced
+- Chat interface with better message handling
+- Input section styling with modern design
+- Error handling for image uploads
+- Message history to support image messages
