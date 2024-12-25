@@ -1,111 +1,142 @@
-document.addEventListener('DOMContentLoaded', () => {
-  const apiKeyInput = document.getElementById('api-key');
-  const saveApiKeyButton = document.getElementById('save-api-key');
-  const userInput = document.getElementById('user-input');
-  const sendMessageButton = document.getElementById('send-message');
-  const chatResponses = document.getElementById('chat-responses');
-  const apiKeyStatus = document.createElement('div');
-  apiKeyStatus.id = 'api-key-status';
-  saveApiKeyButton.parentNode.insertBefore(apiKeyStatus, saveApiKeyButton.nextSibling);
+// API Key Management
+let apiKey = '';
 
-  // Load saved API key
+// DOM Elements
+const settingsIcon = document.querySelector('.settings-icon');
+const settingsModal = document.getElementById('settings-modal');
+const closeModal = document.querySelector('.close-modal');
+const modalApiKeyInput = document.getElementById('modal-api-key');
+const saveModalApiKey = document.getElementById('save-modal-api-key');
+const modalApiKeyStatus = document.getElementById('modal-api-key-status');
+
+const userInput = document.getElementById('user-input');
+const sendMessageBtn = document.getElementById('send-message');
+const chatResponses = document.getElementById('chat-responses');
+
+// Settings Modal Functionality
+settingsIcon.addEventListener('click', () => {
+  settingsModal.style.display = 'block';
+  // Retrieve and pre-fill existing API key
   chrome.storage.sync.get(['grokApiKey'], (result) => {
     if (result.grokApiKey) {
-      apiKeyInput.value = result.grokApiKey.trim();
-      apiKeyStatus.textContent = 'API Key loaded successfully';
-      apiKeyStatus.style.color = 'green';
+      modalApiKeyInput.value = result.grokApiKey;
     }
   });
+});
 
-  // Save API key
-  saveApiKeyButton.addEventListener('click', () => {
-    const apiKey = apiKeyInput.value.trim();
-    if (apiKey) {
-      chrome.storage.sync.set({grokApiKey: apiKey}, () => {
-        apiKeyStatus.textContent = 'API Key saved successfully!';
-        apiKeyStatus.style.color = 'green';
-        console.log('API Key saved to chrome storage');
-      });
-    } else {
-      apiKeyStatus.textContent = 'Please enter a valid API key';
-      apiKeyStatus.style.color = 'red';
-    }
+closeModal.addEventListener('click', () => {
+  settingsModal.style.display = 'none';
+});
+
+// Close modal when clicking outside of it
+window.addEventListener('click', (event) => {
+  if (event.target === settingsModal) {
+  settingsModal.style.display = 'none';
+  }
+});
+
+// Save API Key from Modal
+saveModalApiKey.addEventListener('click', () => {
+  const newApiKey = modalApiKeyInput.value.trim();
+  
+  if (!newApiKey) {
+    modalApiKeyStatus.textContent = 'API Key cannot be empty';
+    modalApiKeyStatus.style.color = 'red';
+    return;
+  }
+
+  // Save API Key to Chrome Storage
+  chrome.storage.sync.set({grokApiKey: newApiKey}, () => {
+    apiKey = newApiKey;
+    modalApiKeyStatus.textContent = 'API Key saved successfully!';
+    modalApiKeyStatus.style.color = 'green';
+    
+    // Optional: Hide modal after successful save
+    setTimeout(() => {
+      settingsModal.style.display = 'none';
+    }, 1500);
   });
+});
 
-  // Send message to Grok AI
-  sendMessageButton.addEventListener('click', async () => {
-    const message = userInput.value.trim();
-    if (!message) return;
+// Send Message Functionality
+function sendMessage() {
+  const message = userInput.value.trim();
+  
+  if (!message) return;
+
+  // Retrieve API Key before sending
+  chrome.storage.sync.get(['grokApiKey'], (result) => {
+    if (!result.grokApiKey) {
+      alert('Please set your Grok API Key in Settings first!');
+      return;
+    }
 
     // Add user message to chat
-    addMessageToChatUI(message, 'user');
+    const userMessageEl = document.createElement('div');
+    userMessageEl.classList.add('message', 'user-message');
+    userMessageEl.textContent = message;
+    chatResponses.appendChild(userMessageEl);
 
-    // Retrieve API key
-    try {
-      const { grokApiKey } = await new Promise((resolve, reject) => {
-        chrome.storage.sync.get(['grokApiKey'], (result) => {
-          if (chrome.runtime.lastError) {
-            reject(chrome.runtime.lastError);
-          } else {
-            resolve(result);
-          }
-        });
-      });
-
-      if (!grokApiKey) {
-        throw new Error('No API key found. Please save your API key first.');
-      }
-
-      const trimmedApiKey = grokApiKey.trim();
-      const response = await fetchGrokResponse(message, trimmedApiKey);
-      addMessageToChatUI(response, 'ai');
-    } catch (error) {
-      console.error('Detailed Error:', error);
-      addMessageToChatUI(`Error: ${error.message}`, 'ai');
-    }
+    // Call Grok API
+    fetch('https://api.xai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${result.grokApiKey}`
+      },
+      body: JSON.stringify({
+        model: "grok-1",
+        messages: [{ role: "user", content: message }]
+      })
+    })
+    .then(response => response.json())
+    .then(data => {
+      const aiMessageEl = document.createElement('div');
+      aiMessageEl.classList.add('message', 'ai-message');
+      aiMessageEl.textContent = data.choices[0].message.content;
+      chatResponses.appendChild(aiMessageEl);
+      
+      // Scroll to bottom
+      chatResponses.scrollTop = chatResponses.scrollHeight;
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      const errorMessageEl = document.createElement('div');
+      errorMessageEl.classList.add('message', 'ai-message');
+      errorMessageEl.textContent = 'Sorry, there was an error processing your request.';
+      chatResponses.appendChild(errorMessageEl);
+    });
 
     // Clear input
     userInput.value = '';
   });
+}
 
-  function addMessageToChatUI(message, type) {
-    const messageElement = document.createElement('div');
-    messageElement.classList.add('message', `${type}-message`);
-    messageElement.textContent = message;
-    chatResponses.appendChild(messageElement);
-    chatResponses.scrollTop = chatResponses.scrollHeight;
-  }
+// Send message on button click
+sendMessageBtn.addEventListener('click', sendMessage);
 
-  async function fetchGrokResponse(message, apiKey) {
-    try {
-      console.log('Sending request with API key:', apiKey.substring(0, 5) + '...');
-      
-      const response = await fetch('https://api.x.ai/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${apiKey}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          model: 'grok-2-1212',
-          messages: [{ role: 'user', content: message }]
-        })
-      });
-
-      console.log('Response status:', response.status);
-
-      if (!response.ok) {
-        const errorBody = await response.text();
-        console.error('Error response body:', errorBody);
-        throw new Error(`HTTP error! status: ${response.status}, body: ${errorBody}`);
-      }
-
-      const data = await response.json();
-      console.log('API Response:', data);
-      return data.choices[0].message.content;
-    } catch (error) {
-      console.error('Detailed Grok API Error:', error);
-      throw error;
+// Send message on Enter, multiline on Ctrl+Enter
+userInput.addEventListener('keydown', (event) => {
+  if (event.key === 'Enter') {
+    if (event.ctrlKey) {
+      // Insert new line for Ctrl+Enter
+      const start = event.target.selectionStart;
+      const end = event.target.selectionEnd;
+      const value = event.target.value;
+      event.target.value = value.substring(0, start) + '\n' + value.substring(end);
+      event.target.selectionStart = event.target.selectionEnd = start + 1;
+      event.preventDefault(); // Prevent default Enter key behavior
+    } else {
+      // Send message on Enter
+      event.preventDefault();
+      sendMessage();
     }
+  }
+});
+
+// Initialize by checking for existing API Key
+chrome.storage.sync.get(['grokApiKey'], (result) => {
+  if (result.grokApiKey) {
+    apiKey = result.grokApiKey;
   }
 });
