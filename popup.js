@@ -13,6 +13,44 @@ const userInput = document.getElementById('user-input');
 const sendMessageBtn = document.getElementById('send-message');
 const chatResponses = document.getElementById('chat-responses');
 
+// Chat History Management
+function saveMessage(message, type) {
+  chrome.storage.local.get(['chatHistory'], (result) => {
+    const chatHistory = result.chatHistory || [];
+    chatHistory.push({ message, type, timestamp: new Date().toISOString() });
+    
+    // Limit chat history to last 100 messages to prevent excessive storage
+    const trimmedHistory = chatHistory.slice(-100);
+    
+    chrome.storage.local.set({ chatHistory: trimmedHistory }, () => {
+      console.log('Message saved to chat history');
+    });
+  });
+}
+
+function loadChatHistory() {
+  chrome.storage.local.get(['chatHistory'], (result) => {
+    const chatHistory = result.chatHistory || [];
+    
+    // Clear existing chat responses
+    chatResponses.innerHTML = '';
+    
+    // Render saved messages
+    chatHistory.forEach(item => {
+      const messageEl = document.createElement('div');
+      messageEl.classList.add('message', `${item.type}-message`);
+      messageEl.textContent = item.message;
+      chatResponses.appendChild(messageEl);
+    });
+    
+    // Scroll to bottom
+    chatResponses.scrollTop = chatResponses.scrollHeight;
+  });
+}
+
+// Load chat history when popup is opened
+document.addEventListener('DOMContentLoaded', loadChatHistory);
+
 // Settings Modal Functionality
 settingsIcon.addEventListener('click', () => {
   settingsModal.style.display = 'block';
@@ -31,7 +69,7 @@ closeModal.addEventListener('click', () => {
 // Close modal when clicking outside of it
 window.addEventListener('click', (event) => {
   if (event.target === settingsModal) {
-  settingsModal.style.display = 'none';
+    settingsModal.style.display = 'none';
   }
 });
 
@@ -64,6 +102,9 @@ function sendMessage() {
   
   if (!message) return;
 
+  // Save user message to history
+  saveMessage(message, 'user');
+
   // Retrieve API Key before sending
   chrome.storage.sync.get(['grokApiKey'], (result) => {
     if (!result.grokApiKey) {
@@ -78,22 +119,27 @@ function sendMessage() {
     chatResponses.appendChild(userMessageEl);
 
     // Call Grok API
-    fetch('https://api.xai.com/v1/chat/completions', {
+    fetch('https://api.x.ai/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${result.grokApiKey}`
       },
       body: JSON.stringify({
-        model: "grok-1",
+        model: "grok-2-1212",
         messages: [{ role: "user", content: message }]
       })
     })
     .then(response => response.json())
     .then(data => {
+      const aiResponse = data.choices[0].message.content;
+      
+      // Save AI message to history
+      saveMessage(aiResponse, 'ai');
+
       const aiMessageEl = document.createElement('div');
       aiMessageEl.classList.add('message', 'ai-message');
-      aiMessageEl.textContent = data.choices[0].message.content;
+      aiMessageEl.textContent = aiResponse;
       chatResponses.appendChild(aiMessageEl);
       
       // Scroll to bottom
@@ -101,9 +147,14 @@ function sendMessage() {
     })
     .catch(error => {
       console.error('Error:', error);
+      const errorMessage = 'Sorry, there was an error processing your request.';
+      
+      // Save error message to history
+      saveMessage(errorMessage, 'ai');
+
       const errorMessageEl = document.createElement('div');
       errorMessageEl.classList.add('message', 'ai-message');
-      errorMessageEl.textContent = 'Sorry, there was an error processing your request.';
+      errorMessageEl.textContent = errorMessage;
       chatResponses.appendChild(errorMessageEl);
     });
 
