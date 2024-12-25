@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "AEye",
-  "version": "0.1.0",
-  "description": "AI sidebar powered by xAI Grok",
+  "version": "1.0.0",
+  "description": "AI-Powered Browser Assistant",
   "permissions": [
     "storage",
     "activeTab"
@@ -17,7 +17,7 @@
   },
   "icons": {
     "16": "logo/logo_16x16.png",
-    "48": "logo/logo_48x48.png", 
+    "48": "logo/logo_48x48.png",
     "128": "logo/logo_128_x_128.png"
   },
   "background": {
