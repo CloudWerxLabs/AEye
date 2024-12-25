@@ -10,15 +10,15 @@
   "action": {
     "default_popup": "popup.html",
     "default_icon": {
-      "16": "logo/icon16.png",
-      "48": "logo/icon48.png",
-      "128": "logo/icon128.png"
+      "16": "logo/logo_16x16.png",
+      "48": "logo/logo_48x48.png",
+      "128": "logo/logo_128_x_128.png"
     }
   },
   "icons": {
-    "16": "logo/icon16.png",
-    "48": "logo/icon48.png", 
-    "128": "logo/icon128.png"
+    "16": "logo/logo_16x16.png",
+    "48": "logo/logo_48x48.png", 
+    "128": "logo/logo_128_x_128.png"
   },
   "background": {
     "service_worker": "background.js"
