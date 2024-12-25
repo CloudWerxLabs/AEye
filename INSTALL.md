@@ -31,6 +31,7 @@
 #### Prerequisites
 1. Install Git from https://git-scm.com/download/win
 2. Ensure Git is in system PATH
+3. Get FREE xAI Grok API Key here https://console.x.ai/
 
 #### PowerShell Installation
 ```powershell
