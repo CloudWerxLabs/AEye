@@ -3,13 +3,15 @@
 <head>
   <title>AEye</title>
   <link rel="stylesheet" href="styles.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 <body>
   <div class="container">
     <h1>AEye</h1>
     
     <div class="api-key-section">
-      <input type="text" id="api-key" placeholder="Enter Grok API Key">
+      <input type="text" id="api-key" placeholder="Enter Grok API Key" autocomplete="off">
       <button id="save-api-key">Save API Key</button>
       <div id="api-key-status"></div>
     </div>
@@ -17,7 +19,7 @@
     <div class="chat-section">
       <div id="chat-responses" class="chat-responses"></div>
       <div class="input-section">
-        <input type="text" id="user-input" placeholder="Type your message...">
+        <input type="text" id="user-input" placeholder="Type your message..." autocomplete="off">
         <button id="send-message">Send</button>
       </div>
     </div>
