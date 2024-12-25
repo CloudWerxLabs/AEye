@@ -34,6 +34,17 @@
 - Updated `manifest.json` to use new logo icons
 - Created `icons/` directory in extension folder
 
+### README Logo Optimization
+- Reduced logo size to 50% width
+- Improved README visual layout
+- Used HTML img tag for precise sizing control
+- Enhanced readability and aesthetic balance
+
+### Design Refinements
+- Implemented responsive logo sizing
+- Maintained logo aspect ratio
+- Improved mobile and desktop viewing experience
+
 ### Roadmap Creation
 - Developed comprehensive project roadmap
 - Outlined project phases and milestones
@@ -207,6 +218,24 @@
 - Preserved project core identity
 - Enhanced visual and textual branding
 - Prepared for future marketing materials
+
+### Installation Documentation Enhancement
+- Added detailed step-by-step installation guide to INSTALL.md
+- Synchronized installation instructions between README and INSTALL.md
+- Improved user onboarding documentation
+- Provided comprehensive, beginner-friendly installation steps
+
+### Documentation Consistency
+- Ensured uniform installation guidance
+- Matched repository and README instructions
+- Enhanced clarity and user experience
+- Standardized installation documentation across project files
+
+### User Experience Improvements
+- Created more detailed, granular installation steps
+- Added visual cues and important notes
+- Simplified complex installation process
+- Improved accessibility for less technical users
 
 ### Notes
 - Ensure secure API key storage
