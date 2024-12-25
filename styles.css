@@ -38,15 +38,35 @@ body {
   box-shadow: var(--shadow-elevated);
 }
 
-h1 {
-  text-align: center;
+.header {
+  display: flex;
+  align-items: center;
   padding: 15px;
+  background: linear-gradient(145deg, var(--background-dark), var(--surface-dark));
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.logo {
+  width: 40px;
+  height: 40px;
+  margin-right: 15px;
+  border-radius: 8px;
+  box-shadow: var(--shadow-subtle);
+  transition: transform 0.2s ease;
+}
+
+.logo:hover {
+  transform: scale(1.1);
+}
+
+h1 {
   background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   font-weight: 600;
   letter-spacing: -1px;
   font-size: 24px;
+  margin: 0;
 }
 
 .api-key-section {
