@@ -1,6 +1,6 @@
 # 🤖 AEye - AI-Powered Chrome Extension
 
-![AEye Logo](logo_with_text.svg)
+<img src="logo_with_text.svg" alt="AEye Logo" width="50%">
 
 ## 🌟 Project Overview
 
