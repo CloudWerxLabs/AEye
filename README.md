@@ -60,11 +60,8 @@ AEye is an innovative Chrome extension that brings powerful AI capabilities dire
 
 ## 🛠 Prerequisites
 
-- Windows 10/11
 - Google Chrome
-- Git
-- PowerShell
-- AI Service API Key
+- xAI Grok FREE API Key from https://console.x.ai/
 
 ## 📘 Documentation
 
