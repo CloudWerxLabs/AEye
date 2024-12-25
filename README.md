@@ -74,7 +74,7 @@ AEye is an innovative Chrome extension that brings powerful AI capabilities dire
 
 ## 💡 Getting Started
 
-1. Obtain AI Service API Key
+1. Obtain XAI Grok FREE API Key (https://console.x.ai/)
 2. Install Extension
 3. Configure Settings
 4. Start Chatting!
