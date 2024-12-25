@@ -1,8 +1,8 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap');
 
 :root {
-  --primary-color: #3b82f6;
-  --secondary-color: #10b981;
+  --gradient-primary: linear-gradient(135deg, #FF00FF, #9932CC, #00BFFF);
+  --gradient-secondary: linear-gradient(135deg, #FF1493, #8A2BE2, #1E90FF);
   --background-dark: #121212;
   --surface-dark: #1e1e1e;
   --text-primary: #ffffff;
@@ -17,7 +17,7 @@
   margin: 0;
   padding: 0;
   scrollbar-width: thin;
-  scrollbar-color: var(--primary-color) transparent;
+  scrollbar-color: #FF1493 transparent;
 }
 
 body {
@@ -43,7 +43,7 @@ body {
   align-items: center;
   justify-content: space-between;
   padding: 15px;
-  background: linear-gradient(145deg, var(--background-dark), var(--surface-dark));
+  background: var(--gradient-primary);
   border-bottom: 1px solid rgba(255,255,255,0.1);
 }
 
@@ -61,7 +61,7 @@ body {
 }
 
 h1 {
-  background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+  background: var(--gradient-primary);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   font-weight: 600;
@@ -91,25 +91,28 @@ h1 {
 
 #api-key:focus {
   outline: none;
-  border-color: var(--primary-color);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+  border-color: #FF1493;
+  box-shadow: 0 0 0 3px rgba(255, 20, 147, 0.2);
 }
 
 #save-api-key {
   margin-top: 10px;
   padding: 10px;
-  background: linear-gradient(145deg, var(--primary-color), var(--secondary-color));
+  background: var(--gradient-primary);
   color: white;
   border: none;
   border-radius: 8px;
   font-weight: 600;
   cursor: pointer;
   transition: transform 0.2s ease;
+  background-size: 200% auto;
+  background-position: right center;
 }
 
 #save-api-key:hover {
   transform: translateY(-2px);
   box-shadow: var(--shadow-subtle);
+  background-position: left center;
 }
 
 #api-key-status {
@@ -159,7 +162,7 @@ h1 {
 }
 
 .user-message {
-  background: linear-gradient(145deg, var(--primary-color), #2563eb);
+  background: var(--gradient-secondary);
   color: white;
   align-self: flex-end;
   margin-left: auto;
@@ -192,24 +195,27 @@ h1 {
 
 #user-input:focus {
   outline: none;
-  border-color: var(--primary-color);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+  border-color: #FF1493;
+  box-shadow: 0 0 0 3px rgba(255, 20, 147, 0.2);
 }
 
 #send-message {
   padding: 10px 15px;
-  background: linear-gradient(145deg, var(--primary-color), var(--secondary-color));
+  background: var(--gradient-primary);
   color: white;
   border: none;
   border-radius: 8px;
   font-weight: 600;
   cursor: pointer;
   transition: transform 0.2s ease;
+  background-size: 200% auto;
+  background-position: right center;
 }
 
 #send-message:hover {
   transform: translateY(-2px);
   box-shadow: var(--shadow-subtle);
+  background-position: left center;
 }
 
 .settings-icon {
@@ -237,7 +243,7 @@ h1 {
 }
 
 .settings-content {
-  background-color: var(--surface-dark);
+  background: linear-gradient(145deg, var(--surface-dark), #2a2a2a);
   margin: 15% auto;
   padding: 20px;
   border-radius: var(--border-radius);
@@ -253,16 +259,22 @@ h1 {
   font-size: 28px;
   font-weight: bold;
   cursor: pointer;
+  background: var(--gradient-primary);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 .close-modal:hover {
-  color: var(--text-primary);
+  opacity: 0.8;
 }
 
 .settings-content h2 {
   color: var(--text-primary);
   margin-bottom: 20px;
   text-align: center;
+  background: var(--gradient-primary);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 .settings-content label {
