@@ -122,6 +122,64 @@ h1 {
   color: var(--text-secondary);
 }
 
+.model-selector-container {
+  padding: 10px 15px;
+  background: var(--surface-dark);
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+  display: flex;
+  justify-content: center;
+}
+
+.model-selector {
+  width: 100%;
+  max-width: 300px;
+}
+
+.model-selector select {
+  width: 100%;
+  background-color: rgba(255,255,255,0.1);
+  color: var(--text-primary);
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 14px;
+  font-family: 'Inter', sans-serif;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3e%3cpath d='M7 10l5 5 5-5z'/%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 20px;
+  padding-right: 40px;
+}
+
+.model-selector select:hover {
+  background-color: rgba(255,255,255,0.15);
+  border-color: rgba(255,255,255,0.3);
+}
+
+.model-selector select:focus {
+  outline: none;
+  border-color: #FF1493;
+  box-shadow: 0 0 0 2px rgba(255, 20, 147, 0.2);
+}
+
+.model-selector optgroup {
+  background-color: var(--surface-dark);
+  color: var(--text-secondary);
+  font-weight: 600;
+  padding: 8px;
+}
+
+.model-selector option {
+  background-color: var(--surface-dark);
+  color: var(--text-primary);
+  padding: 8px;
+}
+
 .chat-section {
   flex: 1;
   display: flex;

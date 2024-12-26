@@ -1,5 +1,6 @@
 // API Key Management
 let apiKey = '';
+let ollamaUrl = '';
 
 // DOM Elements
 const settingsIcon = document.querySelector('.settings-icon');
@@ -8,6 +9,10 @@ const closeModal = document.querySelector('.close-modal');
 const modalApiKeyInput = document.getElementById('modal-api-key');
 const saveModalApiKey = document.getElementById('save-modal-api-key');
 const modalApiKeyStatus = document.getElementById('modal-api-key-status');
+const ollamaUrlInput = document.getElementById('ollama-url');
+const saveOllamaUrl = document.getElementById('save-ollama-url');
+const ollamaUrlStatus = document.getElementById('ollama-url-status');
+const modelSelect = document.getElementById('model-select');
 
 const userInput = document.getElementById('user-input');
 const sendMessageBtn = document.getElementById('send-message');
@@ -187,6 +192,7 @@ function fileToBase64(file) {
 // Send Message Functionality
 async function sendMessage() {
   const message = userInput.value.trim();
+  const selectedModel = modelSelect.value;
   
   if (!message && !currentImage) return;
 
@@ -229,78 +235,132 @@ async function sendMessage() {
   // Always scroll to bottom after sending
   chatResponses.scrollTop = chatResponses.scrollHeight;
 
-  // Retrieve API Key before sending
-  chrome.storage.sync.get(['grokApiKey'], (result) => {
-    if (!result.grokApiKey) {
-      const errorMessage = 'Please set your Grok API Key in Settings first!';
-      log(errorMessage, 'warn');
-      
-      const errorMessageEl = document.createElement('div');
-      errorMessageEl.classList.add('message', 'ai-message', 'error');
-      errorMessageEl.textContent = errorMessage;
-      chatResponses.appendChild(errorMessageEl);
-      return;
-    }
+  // Check if using Grok or Ollama
+  const isGrok = selectedModel.startsWith('grok');
 
-    // Call Grok API with vision model for images
-    fetch('https://api.x.ai/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${result.grokApiKey}`
-      },
-      body: JSON.stringify({
-        model: currentImage ? "grok-2-vision-1212" : "grok-2-1212",
-        messages: messages,
-        max_tokens: 500,
-        temperature: 0.7,
-        stream: false
-      })
-    })
-    .then(response => {
-      log(`Response status: ${response.status}`);
-      if (!response.ok) {
-        return response.text().then(errorText => {
-          try {
-            const errorJson = JSON.parse(errorText);
-            throw new Error(`API Error: ${errorJson.error || errorText}`);
-          } catch (parseError) {
-            throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
-          }
-        });
+  if (isGrok) {
+    // Retrieve Grok API Key before sending
+    chrome.storage.sync.get(['grokApiKey'], (result) => {
+      if (!result.grokApiKey) {
+        const errorMessage = 'Please set your Grok API Key in Settings first!';
+        log(errorMessage, 'warn');
+        
+        const errorMessageEl = document.createElement('div');
+        errorMessageEl.classList.add('message', 'ai-message', 'error');
+        errorMessageEl.textContent = errorMessage;
+        chatResponses.appendChild(errorMessageEl);
+        return;
       }
-      return response.json();
-    })
-    .then(data => {
-      log('API Response received');
-      
-      const aiResponse = data.choices && data.choices[0] && data.choices[0].message 
-        ? data.choices[0].message.content 
-        : 'Sorry, I could not generate a response.';
-      
-      const aiMessageEl = document.createElement('div');
-      aiMessageEl.classList.add('message', 'ai-message');
-      aiMessageEl.textContent = aiResponse;
-      chatResponses.appendChild(aiMessageEl);
-      
-      // Save AI response to history
-      saveMessage(aiResponse, 'ai');
-      
-      // Clear current image after processing
-      currentImage = null;
-      
-      // Scroll to bottom
-      chatResponses.scrollTop = chatResponses.scrollHeight;
-    })
-    .catch(error => {
-      log(`Error: ${error.message}`, 'error');
-      
-      const errorMessageEl = document.createElement('div');
-      errorMessageEl.classList.add('message', 'ai-message', 'error');
-      errorMessageEl.textContent = `Error: ${error.message}`;
-      chatResponses.appendChild(errorMessageEl);
+
+      // Call Grok API
+      fetch('https://api.x.ai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${result.grokApiKey}`
+        },
+        body: JSON.stringify({
+          model: selectedModel,
+          messages: messages,
+          max_tokens: 500,
+          temperature: 0.7,
+          stream: false
+        })
+      })
+      .then(handleResponse)
+      .then(handleSuccess)
+      .catch(handleError);
     });
-  });
+  } else {
+    // Retrieve Ollama URL before sending
+    chrome.storage.sync.get(['ollamaUrl'], (result) => {
+      if (!result.ollamaUrl) {
+        const errorMessage = 'Please set your Ollama URL in Settings first!';
+        log(errorMessage, 'warn');
+        
+        const errorMessageEl = document.createElement('div');
+        errorMessageEl.classList.add('message', 'ai-message', 'error');
+        errorMessageEl.textContent = errorMessage;
+        chatResponses.appendChild(errorMessageEl);
+        return;
+      }
+
+      // Call Ollama API
+      const endpoint = currentImage && selectedModel === 'llava' ? 'generate' : 'chat';
+      
+      let requestBody = {
+        model: selectedModel,
+        stream: false
+      };
+
+      if (endpoint === 'generate') {
+        requestBody.prompt = message || "What's in this image?";
+        requestBody.images = [currentImage.split(',')[1]]; // Remove data:image/... prefix
+      } else {
+        requestBody.messages = messages;
+      }
+
+      fetch(`${result.ollamaUrl}/api/${endpoint}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(requestBody)
+      })
+      .then(handleResponse)
+      .then(data => {
+        const response = endpoint === 'generate' ? data.response : data.message.content;
+        handleSuccess({ choices: [{ message: { content: response } }] });
+      })
+      .catch(handleError);
+    });
+  }
+}
+
+function handleResponse(response) {
+  log(`Response status: ${response.status}`);
+  if (!response.ok) {
+    return response.text().then(errorText => {
+      try {
+        const errorJson = JSON.parse(errorText);
+        throw new Error(`API Error: ${errorJson.error || errorText}`);
+      } catch (parseError) {
+        throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
+      }
+    });
+  }
+  return response.json();
+}
+
+function handleSuccess(data) {
+  log('API Response received');
+  
+  const aiResponse = data.choices && data.choices[0] && data.choices[0].message 
+    ? data.choices[0].message.content 
+    : 'Sorry, I could not generate a response.';
+  
+  const aiMessageEl = document.createElement('div');
+  aiMessageEl.classList.add('message', 'ai-message');
+  aiMessageEl.textContent = aiResponse;
+  chatResponses.appendChild(aiMessageEl);
+  
+  // Save AI response to history
+  saveMessage(aiResponse, 'ai');
+  
+  // Clear current image after processing
+  currentImage = null;
+  
+  // Scroll to bottom
+  chatResponses.scrollTop = chatResponses.scrollHeight;
+}
+
+function handleError(error) {
+  log(`Error: ${error.message}`, 'error');
+  
+  const errorMessageEl = document.createElement('div');
+  errorMessageEl.classList.add('message', 'ai-message', 'error');
+  errorMessageEl.textContent = `Error: ${error.message}`;
+  chatResponses.appendChild(errorMessageEl);
 }
 
 // Send message on button click
@@ -325,14 +385,95 @@ userInput.addEventListener('keydown', (event) => {
   }
 });
 
+// Model Management
+async function fetchGrokModels() {
+  try {
+    const response = await fetch('https://api.x.ai/v1/models', {
+      headers: {
+        'Authorization': `Bearer ${apiKey}`
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch Grok models');
+    }
+
+    const data = await response.json();
+    return data.data || [];
+  } catch (error) {
+    log(`Error fetching Grok models: ${error.message}`, 'error');
+    return [];
+  }
+}
+
+async function fetchOllamaModels() {
+  try {
+    const response = await fetch(`${ollamaUrl}/api/tags`);
+    if (!response.ok) {
+      throw new Error('Failed to fetch Ollama models');
+    }
+
+    const data = await response.json();
+    return data.models || [];
+  } catch (error) {
+    log(`Error fetching Ollama models: ${error.message}`, 'error');
+    return [];
+  }
+}
+
+async function updateModelList() {
+  // Clear existing options except the default ones
+  const grokOptgroup = modelSelect.querySelector('optgroup[label="Grok"]');
+  const ollamaOptgroup = modelSelect.querySelector('optgroup[label="Ollama"]');
+  
+  grokOptgroup.innerHTML = '';
+  ollamaOptgroup.innerHTML = '';
+
+  // Fetch and add Grok models
+  chrome.storage.sync.get(['grokApiKey'], async (result) => {
+    if (result.grokApiKey) {
+      apiKey = result.grokApiKey;
+      const grokModels = await fetchGrokModels();
+      
+      grokModels.forEach(model => {
+        if (model.id.includes('grok')) {
+          const option = document.createElement('option');
+          option.value = model.id;
+          option.textContent = model.id.replace(/-/g, ' ').replace(/\d+/g, '').trim();
+          grokOptgroup.appendChild(option);
+        }
+      });
+    }
+  });
+
+  // Fetch and add Ollama models
+  chrome.storage.sync.get(['ollamaUrl'], async (result) => {
+    if (result.ollamaUrl) {
+      ollamaUrl = result.ollamaUrl;
+      const ollamaModels = await fetchOllamaModels();
+      
+      ollamaModels.forEach(model => {
+        const option = document.createElement('option');
+        option.value = model.name;
+        option.textContent = model.name;
+        ollamaOptgroup.appendChild(option);
+      });
+    }
+  });
+}
+
 // Settings Modal Functionality
 settingsIcon.addEventListener('click', () => {
   settingsModal.style.display = 'block';
-  // Retrieve and pre-fill existing API key
-  chrome.storage.sync.get(['grokApiKey'], (result) => {
+  // Retrieve and pre-fill existing values
+  chrome.storage.sync.get(['grokApiKey', 'ollamaUrl'], (result) => {
     if (result.grokApiKey) {
       modalApiKeyInput.value = result.grokApiKey;
     }
+    if (result.ollamaUrl) {
+      ollamaUrlInput.value = result.ollamaUrl;
+    }
+    updateModelList();
   });
 });
 
@@ -363,16 +504,64 @@ saveModalApiKey.addEventListener('click', () => {
     modalApiKeyStatus.textContent = 'API Key saved successfully!';
     modalApiKeyStatus.style.color = 'green';
     
-    // Optional: Hide modal after successful save
+    // Clear status after 1.5s
     setTimeout(() => {
-      settingsModal.style.display = 'none';
+      modalApiKeyStatus.textContent = '';
     }, 1500);
+
+    // Update model list
+    updateModelList();
   });
 });
 
-// Initialize by checking for existing API Key
-chrome.storage.sync.get(['grokApiKey'], (result) => {
+// Save Ollama URL from Modal
+saveOllamaUrl.addEventListener('click', () => {
+  const newUrl = ollamaUrlInput.value.trim();
+  
+  if (!newUrl) {
+    ollamaUrlStatus.textContent = 'Ollama URL cannot be empty';
+    ollamaUrlStatus.style.color = 'red';
+    return;
+  }
+
+  // Save URL to Chrome Storage
+  chrome.storage.sync.set({ollamaUrl: newUrl}, () => {
+    ollamaUrl = newUrl;
+    ollamaUrlStatus.textContent = 'Ollama URL saved successfully!';
+    ollamaUrlStatus.style.color = 'green';
+    
+    // Clear status after 1.5s
+    setTimeout(() => {
+      ollamaUrlStatus.textContent = '';
+    }, 1500);
+
+    // Update model list
+    updateModelList();
+  });
+});
+
+// Initialize by checking for existing values and updating model list
+chrome.storage.sync.get(['grokApiKey', 'ollamaUrl'], (result) => {
   if (result.grokApiKey) {
     apiKey = result.grokApiKey;
   }
+  if (result.ollamaUrl) {
+    ollamaUrl = result.ollamaUrl;
+  }
+  updateModelList();
+});
+
+// Refresh model list when clicking settings icon
+settingsIcon.addEventListener('click', () => {
+  settingsModal.style.display = 'block';
+  // Retrieve and pre-fill existing values
+  chrome.storage.sync.get(['grokApiKey', 'ollamaUrl'], (result) => {
+    if (result.grokApiKey) {
+      modalApiKeyInput.value = result.grokApiKey;
+    }
+    if (result.ollamaUrl) {
+      ollamaUrlInput.value = result.ollamaUrl;
+    }
+    updateModelList();
+  });
 });

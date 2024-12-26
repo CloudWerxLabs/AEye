@@ -14,6 +14,23 @@
       <div class="settings-icon">⚙️</div>
     </div>
 
+    <div class="model-selector-container">
+      <div class="model-selector">
+        <select id="model-select">
+          <optgroup label="Grok">
+            <option value="grok-2-1212">Grok 2</option>
+            <option value="grok-2-vision-1212">Grok 2 Vision</option>
+          </optgroup>
+          <optgroup label="Ollama">
+            <option value="llama2">Llama 2</option>
+            <option value="llava">LLaVA</option>
+            <option value="mistral">Mistral</option>
+            <option value="mixtral">Mixtral</option>
+          </optgroup>
+        </select>
+      </div>
+    </div>
+
     <div class="settings-modal" id="settings-modal">
       <div class="settings-content">
         <span class="close-modal">&times;</span>
@@ -23,6 +40,12 @@
           <input type="text" id="modal-api-key" placeholder="Enter Grok API Key" autocomplete="off">
           <button id="save-modal-api-key">Save API Key</button>
           <div id="modal-api-key-status"></div>
+        </div>
+        <div class="api-key-section">
+          <label for="ollama-url">Ollama URL</label>
+          <input type="text" id="ollama-url" placeholder="Enter Ollama URL (e.g. http://localhost:11434)" autocomplete="off">
+          <button id="save-ollama-url">Save URL</button>
+          <div id="ollama-url-status"></div>
         </div>
       </div>
     </div>

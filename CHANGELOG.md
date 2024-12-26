@@ -40,3 +40,19 @@
 - Input section styling with modern design
 - Error handling for image uploads
 - Message history to support image messages
+
+## [1.1.0] - 2024-12-26
+
+### Added
+- Model selection dropdown in the header
+- Support for Ollama models (Llama 2, LLaVA, Mistral, Mixtral)
+- Ollama URL configuration in settings
+- Automatic model switching for image understanding (Grok Vision / LLaVA)
+- Dynamic model fetching from both Grok and Ollama APIs
+- Improved error handling and API response processing
+
+### Changed
+- Refactored message handling to support multiple AI providers
+- Updated UI to accommodate model selection
+- Enhanced settings modal with separate sections for Grok and Ollama
+- Model list now updates automatically when settings change
